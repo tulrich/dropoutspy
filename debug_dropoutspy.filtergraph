@@ -46,10 +46,11 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="4" x="0.75749999999999995115" y="0.54259259259259262631">
+  <FILTER uid="4" x="0.33874999999999999556" y="0.57962962962962960578"
+          uiLastX_Normal="191" uiLastY_Normal="369" uiopen_Normal="1">
     <PLUGIN name="dropoutspy" format="VST" category="Effect" manufacturer="tulrich.com"
-            version="V1.0.0" file="/Users/tulrich/Library/Audio/Plug-Ins/VST/dropoutspy32.vst"
-            uid="44727370" isInstrument="0" fileTime="15dec539d28" infoUpdateTime="15dec54b146"
+            version="V1.0.0" file="/Users/tulrich/Library/Audio/Plug-Ins/VST/dropoutspy64.vst"
+            uid="44727370" isInstrument="0" fileTime="15df070af18" infoUpdateTime="15df071f08b"
             numInputs="2" numOutputs="2" isShell="0"/>
     <STATE>162.CMlaKA....fQBMDZ....APjbyAG....Y....A...............................................................................................................................................................................B...</STATE>
     <LAYOUT>

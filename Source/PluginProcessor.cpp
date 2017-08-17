@@ -63,10 +63,9 @@ void DropoutspyAudioProcessor::changeProgramName (int index, const String& newNa
 }
 
 void DropoutspyAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
-  ResetTrackingState(sampleRate, samplesPerBlock);
-  overflow_count_ = 0;
-  warning_count_ = 0;
-  last_overflow_ticks_ = 0;
+  sample_rate_ = sampleRate;
+  samples_per_block_ = samplesPerBlock;
+  DoReset();
 }
 
 void DropoutspyAudioProcessor::ResetTrackingState(double sample_rate, int samples_per_block) {
@@ -86,11 +85,17 @@ void DropoutspyAudioProcessor::releaseResources() {
 }
 
 void DropoutspyAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages) {
+  int64 now = Time::getHighResolutionTicks();
+
   ScopedLock l(lock_);
 
-  int64 now = Time::getHighResolutionTicks();
-  if (total_samples_ == 0) {
+  // To keep precision within reason if the plugin runs continuously for a long time, we
+  // periodically reset the start time & samples.
+  const float RESET_START_TIME_INTERVAL = 3600.0f;
+  if (total_samples_ == 0 ||
+      Time::highResolutionTicksToSeconds(now - start_ticks_min_) > RESET_START_TIME_INTERVAL) {
     // TODO: can we determine ticks at true start of playback?
+    ResetTrackingState(sample_rate_, samples_per_block_);
     start_ticks_min_ = now;
     start_ticks_max_ = now;
   }
@@ -111,10 +116,16 @@ void DropoutspyAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuff
   last_delta_ = (computed_min - start_ticks_min_) / float(ticks_per_block_);
 
   // Update histogram.
-  int bucket = int(last_delta_ * 16 + 0.5f);
+  int bucket = int(last_delta_ * (METER_BUCKETS - 1));
   if (bucket < 0) bucket = 0;
-  if (bucket > 15) bucket = 15;
+  if (bucket >= METER_BUCKETS) bucket = METER_BUCKETS - 1;
   delta_histo_[bucket]++;
+  if (delta_histo_[bucket] > 10000) {
+    // Prune histogram so the buckets don't ever overflow.
+    for (int i = 0; i < METER_BUCKETS; i++) {
+      if (delta_histo_[i] > 1) delta_histo_[i] = (delta_histo_[i] * 7) >> 3;
+    }
+  }
 
   bool overflow_happened = false;
   bool warning_happened = false;
@@ -124,7 +135,7 @@ void DropoutspyAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuff
     overflow_count_++;
     last_overflow_ticks_ = now;
     ResetTrackingState(sample_rate_, samples_per_block_);
-  } else if (bucket >= 8) {
+  } else if (bucket >= METER_BUCKETS / 2) {
     // Warning.
     warning_happened = true;
     warning_count_++;

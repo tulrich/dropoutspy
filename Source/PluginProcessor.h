@@ -2,6 +2,8 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+const int METER_BUCKETS = 32;
+
 class DropoutspyAudioProcessor  : public AudioProcessor {
 public:
   DropoutspyAudioProcessor();
@@ -62,8 +64,8 @@ public:
     return samples_per_block_;
   }
 
-  const void getHisto(int histo[16]) const {
-    for (int i = 0; i < 16; i++) histo[i] = delta_histo_[i];
+  const void getHisto(int histo[METER_BUCKETS]) const {
+    for (int i = 0; i < METER_BUCKETS; i++) histo[i] = delta_histo_[i];
   }
 
   void DoReset() {
@@ -72,7 +74,7 @@ public:
     warning_count_ = 0;
     overflow_count_ = 0;
     last_overflow_ticks_ = 0;
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < METER_BUCKETS; i++) {
       delta_histo_[i] = 0;
     }
   }
@@ -95,7 +97,7 @@ private:
   int64 last_overflow_ticks_ = 0;
   float spread_ = 0;
   float last_delta_ = 0;
-  int delta_histo_[16];
+  int delta_histo_[METER_BUCKETS];
 
   bool emit_click_on_warning_ = false;
   bool emit_click_on_dropout_ = false;

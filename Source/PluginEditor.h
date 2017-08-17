@@ -37,6 +37,7 @@ private:
   ToggleButton emit_button_dropout_;
   ToggleButton emit_button_warning_;
   TextButton reset_button_;
+  HyperlinkButton tulrich_button_;
 
   Repainter* repainter_ = nullptr;
 
